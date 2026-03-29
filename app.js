@@ -22,6 +22,12 @@ new Vue({
             const hr = d.getHours().toString().padStart(2, '0');
             const min = d.getMinutes().toString().padStart(2, '0');
             return `${days[d.getDay()]}, ${hr}:${min}`;
+        },
+        currentFullDate() {
+            const d = new Date();
+            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
         }
     },
 
@@ -115,9 +121,11 @@ new Vue({
                     },
                     weekly: rawWeather.daily.time.map((time, i) => ({
                         date: new Date(time).toLocaleDateString('en-US', { weekday: 'short' }),
+                        dateFull: new Date(time).toLocaleDateString('en-US', { weekday: 'long' }),
                         maxTemp: rawWeather.daily.temperature_2m_max[i],
                         minTemp: rawWeather.daily.temperature_2m_min[i],
-                        weathercode: rawWeather.daily.weathercode[i]
+                        weathercode: rawWeather.daily.weathercode[i],
+                        humidity: rawWeather.hourly.relativehumidity_2m[i * 24] || '--'
                     })),
                     hourly: {
                         humidity: rawWeather.hourly.relativehumidity_2m[idx],
@@ -175,6 +183,26 @@ new Vue({
             if (code > 0 && code <= 3) return 'https://cdn-icons-png.flaticon.com/512/1146/1146869.png';
             if (code >= 51 && code <= 67) return 'https://cdn-icons-png.flaticon.com/512/3313/3313888.png';
             return 'https://cdn-icons-png.flaticon.com/512/1146/1146869.png';
+        },
+
+        getWeatherDescription(code) {
+            if (code === 0) return 'Clear Sky';
+            if (code === 1) return 'Mainly Clear';
+            if (code === 2) return 'Partly Cloudy';
+            if (code === 3) return 'Overcast';
+            if (code >= 51 && code <= 55) return 'Drizzle';
+            if (code >= 56 && code <= 57) return 'Freezing Drizzle';
+            if (code >= 61 && code <= 65) return 'Rainy';
+            if (code >= 66 && code <= 67) return 'Freezing Rain';
+            if (code >= 71 && code <= 77) return 'Snowfall';
+            if (code >= 80 && code <= 82) return 'Rain Showers';
+            if (code >= 95) return 'Thunderstorm';
+            return 'Mostly Cloudy';
+        },
+
+        scrollToHighlights() {
+            const el = document.getElementById('highlights');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
         }
     },
 

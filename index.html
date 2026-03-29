@@ -11,10 +11,10 @@
 <body class="flex flex-center">
     <div id="app" class="dashboard flex" v-cloak>
         <aside class="sidebar flex flex-col">
-            <div class="search-container flex gap-10" style="position: relative;">
-                <input 
-                    type="text" 
-                    placeholder="Search for places..." 
+            <div class="search-container flex gap-10">
+                <input
+                    type="text"
+                    placeholder="Search for places..."
                     v-model="searchQuery"
                     @input="onSearchInput"
                     @keyup.enter="searchWeather"
@@ -23,8 +23,8 @@
                 <button class="flex flex-center btn-round" @click="searchWeather">🔍</button>
 
                 <ul class="suggestions-list" v-if="suggestions.length > 0">
-                    <li 
-                        v-for="(city, index) in suggestions" 
+                    <li
+                        v-for="(city, index) in suggestions"
                         :key="index"
                         @click="selectCity(city)"
                         class="suggestion-item flex flex-col"
@@ -34,31 +34,62 @@
                     </li>
                 </ul>
             </div>
-            
+
             <div class="current-weather flex flex-col" v-if="weatherData">
-                <img :src="getWeatherIcon(weatherData.current.weathercode)" alt="Weather icon" class="main-icon" :class="{ 'skeleton': isLoading }">
-                <h1 class="main-temp" :class="{ 'skeleton': isLoading }">{{ displayTemp(weatherData.current.temperature) }}<span class="unit">°{{ unit }}</span></h1>
-                <h2 class="day-time text-secondary" :class="{ 'skeleton': isLoading }">{{ currentDayTime }}</h2>
-                <div class="flex items-center text-primary text-large" style="margin-top: 10px;">
-                    <span class="icon" style="margin-right: 8px;">📍</span>
-                    <span :class="{ 'skeleton': isLoading }">{{ locationName }}</span>
+                <div class="hero-top">
+                    <div class="hero-meta">
+                        <div class="hero-date flex items-center text-secondary">
+                            <span class="icon">📅</span>
+                            <span :class="{ 'skeleton': isLoading }">{{ currentFullDate }}</span>
+                        </div>
+                        <div class="hero-location flex items-center text-primary">
+                            <span class="icon">📍</span>
+                            <span :class="{ 'skeleton': isLoading }">{{ locationName }}</span>
+                        </div>
+                    </div>
                 </div>
-                <hr class="divider">
-                <div class="weather-row flex items-center text-secondary text-small">
-                    <span class="icon">☁️</span>
-                    <span class="desc" :class="{ 'skeleton': isLoading }">Mostly Cloudy</span>
+
+                <div class="hero-weather-row">
+                    <div class="hero-condition">
+                        <div class="hero-desc flex items-center" :class="{ 'skeleton': isLoading }">
+                            <span class="icon">☁️</span>
+                            <span>{{ getWeatherDescription(weatherData.current.weathercode) }}</span>
+                        </div>
+                        <h1 class="main-temp" :class="{ 'skeleton': isLoading }">{{ displayTemp(weatherData.current.temperature) }}<span class="unit">°{{ unit }}</span></h1>
+                    </div>
+                    <img :src="getWeatherIcon(weatherData.current.weathercode)" alt="Weather icon" class="main-icon" :class="{ 'skeleton': isLoading }">
+                </div>
+
+                <div class="hero-bottom">
+                    <span class="hero-wind text-secondary" :class="{ 'skeleton': isLoading }">💨 Wind, {{ weatherData.current.windspeed }} km/h</span>
+                    <a href="#highlights" class="view-highlights-btn" @click.prevent="scrollToHighlights">View Highlights</a>
+                </div>
+
+                <div class="desktop-only-meta">
+                    <img :src="getWeatherIcon(weatherData.current.weathercode)" alt="Weather icon" class="main-icon" :class="{ 'skeleton': isLoading }">
+                    <h1 class="main-temp" :class="{ 'skeleton': isLoading }">{{ displayTemp(weatherData.current.temperature) }}<span class="unit">°{{ unit }}</span></h1>
+                    <h2 class="day-time text-secondary" :class="{ 'skeleton': isLoading }">{{ currentDayTime }}</h2>
+                    <div class="location-row flex items-center text-primary text-large">
+                        <span class="icon">📍</span>
+                        <span :class="{ 'skeleton': isLoading }">{{ locationName }}</span>
+                    </div>
+                    <hr class="divider">
+                    <div class="weather-row flex items-center text-secondary text-small">
+                        <span class="icon">☁️</span>
+                        <span :class="{ 'skeleton': isLoading }">{{ getWeatherDescription(weatherData.current.weathercode) }}</span>
+                    </div>
                 </div>
             </div>
-            
+
             <div class="loading-state" v-else-if="isLoading">
                 <p>Loading weather...</p>
             </div>
             <div class="error-state" v-else-if="error">
-                <p style="color: red;">{{ error }}</p>
+                <p class="error-text">{{ error }}</p>
             </div>
         </aside>
 
-        <main class="main-content">
+        <main class="main-content" id="highlights">
             <header class="top-nav flex flex-between">
                 <div class="tabs">
                     <a href="#" class="tab" :class="[activeTab === 'today' ? 'active text-primary' : 'text-secondary']" @click.prevent="setTab('today')">Today</a>
@@ -73,35 +104,29 @@
             <section class="highlights-section" v-if="weatherData && activeTab === 'today'">
                 <h2 class="section-title">Today's Highlights</h2>
                 <div class="highlights-grid">
-                    <div class="card flex flex-col flex-between">
+                    <div class="card highlight-card flex flex-col flex-center">
                         <h3 class="text-secondary">UV Index</h3>
                         <div class="uv-gauge" :class="{ 'skeleton': isLoading }">
-                            <span class="uv-value" style="font-size: 32px; font-weight: 600;">{{ weatherData.daily.uvIndex }}</span>
+                            <span class="uv-value">{{ weatherData.daily.uvIndex }}</span>
                         </div>
                     </div>
-                    <div class="card flex flex-col flex-between">
-                        <h3 class="text-secondary">Wind Status</h3>
-                        <div class="card-value" :class="{ 'skeleton': isLoading }">
-                            {{ weatherData.current.windspeed }} <span class="unit text-secondary">km/h</span>
-                        </div>
-                    </div>
-                    <div class="card flex flex-col flex-between">
-                        <h3 class="text-secondary">Sunrise & Sunset</h3>
-                        <div class="sun-times" :class="{ 'skeleton': isLoading }">
-                            <p>🌅 {{ weatherData.daily.sunrise }}</p>
-                            <p>🌇 {{ weatherData.daily.sunset }}</p>
-                        </div>
-                    </div>
-                    <div class="card flex flex-col flex-between">
+                    <div class="card highlight-card flex flex-col flex-between">
                         <h3 class="text-secondary">Humidity</h3>
                         <div class="card-value" :class="{ 'skeleton': isLoading }">
-                            {{ weatherData.hourly.humidity }} <span class="unit text-secondary">%</span>
+                            {{ weatherData.hourly.humidity }}<span class="unit text-secondary">%</span>
                         </div>
                         <div class="status flex items-center text-secondary" :class="{ 'skeleton': isLoading }">
                             <span class="status-icon">👍</span> {{ getHumidityStatus(weatherData.hourly.humidity) }}
                         </div>
                     </div>
-                    <div class="card flex flex-col flex-between">
+                    <div class="card highlight-card flex flex-col flex-between">
+                        <h3 class="text-secondary">Wind Speed</h3>
+                        <div class="card-value stacked" :class="{ 'skeleton': isLoading }">
+                            {{ weatherData.current.windspeed }}
+                            <span class="unit text-secondary">km/h</span>
+                        </div>
+                    </div>
+                    <div class="card highlight-card flex flex-col flex-between">
                         <h3 class="text-secondary">Visibility</h3>
                         <div class="card-value" :class="{ 'skeleton': isLoading }">
                             {{ weatherData.hourly.visibility }} <span class="unit text-secondary">km</span>
@@ -110,7 +135,14 @@
                             <span class="status-icon">👀</span> {{ getVisibilityStatus(weatherData.hourly.visibility) }}
                         </div>
                     </div>
-                    <div class="card flex flex-col flex-between">
+                    <div class="card highlight-card desktop-extra-card flex flex-col flex-between">
+                        <h3 class="text-secondary">Sunrise & Sunset</h3>
+                        <div class="sun-times" :class="{ 'skeleton': isLoading }">
+                            <p>🌅 {{ weatherData.daily.sunrise }}</p>
+                            <p>🌇 {{ weatherData.daily.sunset }}</p>
+                        </div>
+                    </div>
+                    <div class="card highlight-card desktop-extra-card flex flex-col flex-between">
                         <h3 class="text-secondary">Air Quality</h3>
                         <div class="card-value" :class="{ 'skeleton': isLoading }">
                             {{ weatherData.hourly.aqi }}
@@ -123,15 +155,29 @@
             </section>
 
             <section class="weekly-section" v-if="weatherData && activeTab === 'week'">
-                <h2 class="section-title">7-Day Forecast</h2>
+                <h2 class="section-title">5-Day Forecast</h2>
                 <div class="weekly-grid flex gap-10">
-                    <div class="card weekly-card flex flex-col flex-center" v-for="day in weatherData.weekly" :key="day.date">
+                    <div class="card weekly-card flex flex-col flex-center" v-for="day in weatherData.weekly.slice(0, 5)" :key="day.date">
                         <h3 class="text-secondary" :class="{ 'skeleton': isLoading }">{{ day.date }}</h3>
-                        <img :src="getWeatherIcon(day.weathercode)" alt="Weather icon" style="width: 50px; margin: 15px 0;" :class="{ 'skeleton': isLoading }">
+                        <img :src="getWeatherIcon(day.weathercode)" alt="Weather icon" class="weekly-icon" :class="{ 'skeleton': isLoading }">
                         <div class="temps flex flex-between" style="width: 100%;">
                             <span class="text-primary font-600" :class="{ 'skeleton': isLoading }">{{ displayTemp(day.maxTemp) }}°</span>
                             <span class="text-secondary" :class="{ 'skeleton': isLoading }">{{ displayTemp(day.minTemp) }}°</span>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mobile-forecast-section" v-if="weatherData">
+                <h2 class="section-title">5-Day Forecast</h2>
+                <div class="weekly-list-card card">
+                    <div class="weekly-list-row flex items-center" v-for="day in weatherData.weekly.slice(0, 5)" :key="'mlist-'+day.date">
+                        <img :src="getWeatherIcon(day.weathercode)" alt="Weather icon" class="weekly-list-icon" :class="{ 'skeleton': isLoading }">
+                        <span class="weekly-list-day" :class="{ 'skeleton': isLoading }">{{ day.dateFull }}</span>
+                        <span class="weekly-list-humidity text-secondary" :class="{ 'skeleton': isLoading }">💧{{ day.humidity }}%</span>
+                        <span class="weekly-list-temps" :class="{ 'skeleton': isLoading }">
+                            <strong>{{ displayTemp(day.maxTemp) }}°</strong><span class="text-secondary">/{{ displayTemp(day.minTemp) }}°</span>
+                        </span>
                     </div>
                 </div>
             </section>
